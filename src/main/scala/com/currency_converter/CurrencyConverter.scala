@@ -19,12 +19,11 @@ class CurrencyConverter(filePath: String) {
   }
 
   def loadRates(filePath: String): Map[String, Double] = {
-    CurrencyRequester.getRates()
-    //    try {
-    //      CurrencyAPI.getRates()
-    //    } catch {
-    //      case _: Exception => loadFromFile(filePath)
-    //    }
+        try {
+          CurrencyRequester.getRates()
+        } catch {
+          case _: Exception => loadFromFile(filePath)
+        }
   }
 
   def convert(currency: Currency, label: String): Currency = {
@@ -42,17 +41,3 @@ class CurrencyConverter(filePath: String) {
     Currency(value, label)
   }
 }
-
-//object CurrencyConverterMain {
-//  def close(lhs: Double, rhs: Double, precision: Double = 0.1): Boolean = {
-//    (lhs - rhs).abs < precision
-//  }
-//
-//  def main(args: Array[String]): Unit = {
-//    val converter = new CurrencyConverter("currency_rates_usd.csv")
-//
-//    assert(close(converter.convert(Currency(1.0), "RUB").value, 63.33))
-//    assert(close(converter.convert(Currency(1.0), "USD").value, 1.0))
-//    assert(close(converter.convert(Currency(1.0, "CAD"), "CZK").value, 17.22))
-//  }
-//}
