@@ -7,7 +7,7 @@
 
 ### UI:
 
-[ui_img](https://github.com/awant/currency_converter/blob/master/currency_converter_ui.png?raw=true)
+![ui_img](https://github.com/awant/currency_converter/blob/master/currency_converter_ui.png?raw=true)
 
 ### Run:
 
