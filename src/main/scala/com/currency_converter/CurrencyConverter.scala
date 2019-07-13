@@ -1,10 +1,10 @@
 package com.currency_converter
 
-
+case class Rate(rate: Double, label: String = "USD")
 case class Currency(value: Double, label: String = "USD")
 
 class CurrencyConverter(filePath: String = "currency_rates_usd.csv") {
-  var ratesMap: Map[String, Double] = loadRates(filePath)
+  private var ratesMap: Map[String, Double] = loadRates(filePath)
 
   def loadFromFile(filePath: String): Map[String, Double] = {
     var map = Map.empty[String, Double]
@@ -19,16 +19,19 @@ class CurrencyConverter(filePath: String = "currency_rates_usd.csv") {
   }
 
   def loadRates(filePath: String): Map[String, Double] = {
-    loadFromFile(filePath)
-//        try {
-//          CurrencyRequester.getRates()
-//        } catch {
-//          case _: Exception => loadFromFile(filePath)
-//        }
+        try {
+          CurrencyRequester.getRates()
+        } catch {
+          case _: Exception => loadFromFile(filePath)
+        }
   }
 
   def getCurrencyLabels: Seq[String] = {
     ratesMap.keys.toSeq
+  }
+
+  def getRates: List[Rate] = {
+    ratesMap.map { case (label, rate) => Rate(rate, label) }.toList
   }
 
   def defaultCurrencyLabel: String = {
@@ -48,5 +51,10 @@ class CurrencyConverter(filePath: String = "currency_rates_usd.csv") {
     val rateTo = ratesMap(label)
     val value = currency.value / rateFrom * rateTo
     Currency(value, label)
+  }
+
+  def update(): Boolean = {
+    ratesMap = loadRates(filePath)
+    true
   }
 }

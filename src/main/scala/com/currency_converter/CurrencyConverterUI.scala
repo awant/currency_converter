@@ -1,29 +1,38 @@
 package com.currency_converter
 
+import javafx.concurrent.Task
 import javafx.beans.value.{ChangeListener, ObservableValue}
+import scalafx.beans.property.{StringProperty, ObjectProperty}
 import scalafx.application.JFXApp
 import scalafx.scene.Scene
-import scalafx.scene.control.{Button, ComboBox, Label, ProgressIndicator, TextField}
+import scalafx.collections.ObservableBuffer
+import scalafx.scene.control.{Button, ComboBox, Label, ProgressIndicator, TableColumn, TableView, TextField}
 import javafx.event.ActionEvent
-import javafx.concurrent.Task
+import TableColumn._
 
 
 object CurrencyConverterUI extends JFXApp {
   private val converter = new CurrencyConverter
 
+  def setResultedCurrency(newValue: Any, tgtTF: TextField, srcLbl: String, tgtLbl: String): Unit = {
+    try {
+      val value = newValue.toString.toDouble
+      tgtTF.text = converter.convert(Currency(value, srcLbl), tgtLbl).value.toString
+    } catch {
+      case _: NumberFormatException => tgtTF.text = ""
+    }
+  }
+
   stage = new JFXApp.PrimaryStage {
     title = "Currency converter"
     scene = new Scene(400, 400) {
       // Grid for elements
-      private val yShifts = (20, 50, 90)
+      private val yShifts = (20, 50, 90, 125)
       private val xShifts = (20, 80, 160)
 
       private val curRateLabels = converter.getCurrencyLabels
       private var fromRateLabel = converter.defaultCurrencyLabel
       private var toRateLabel = converter.defaultCurrencyLabel
-      println("curRateLabels", curRateLabels)
-      println("fromRateLabel", fromRateLabel)
-      println("toRateLabel", toRateLabel)
 
       // First row ('From' currency)
       val fromLabel = new Label("From:")
@@ -64,40 +73,54 @@ object CurrencyConverterUI extends JFXApp {
       progressIndicator.layoutX = xShifts._2 + 40
       progressIndicator.layoutY = yShifts._3
 
+      // converter.getCurrencyLabels
+      val ratesTable: TableView[Rate] = new TableView[Rate](ObservableBuffer[Rate](converter.getRates)) {
+        columns ++= List(
+          new TableColumn[Rate, String] {
+            text = "Currency label"
+            cellValueFactory = {lbl => StringProperty(lbl.value.label)}
+            prefWidth = 180
+          },
+          new TableColumn[Rate, Double] {
+            text = "Rate"
+            cellValueFactory = {rate => ObjectProperty(rate.value.rate)}
+            prefWidth = 180
+          }
+        )
+      }
+      ratesTable.setPrefHeight(curRateLabels.size * 35)
+      ratesTable.layoutX = xShifts._1
+      ratesTable.layoutY = yShifts._4
+
       content = List(fromLabel, fromCurRateBox, fromCurrencyTF,
         toLabel, toCurRateBox, toCurrencyTF,
-        updRatesBtn, progressIndicator)
+        updRatesBtn, progressIndicator,
+        ratesTable)
 
       // Actions
       fromCurRateBox.onAction = (_: ActionEvent) => {
         fromRateLabel = fromCurRateBox.selectionModel.apply.getSelectedItem
+        setResultedCurrency(fromCurrencyTF.getText, toCurrencyTF, fromRateLabel, toRateLabel)
       }
 
       toCurRateBox.onAction = (_: ActionEvent) => {
         toRateLabel = toCurRateBox.selectionModel.apply.getSelectedItem
+        setResultedCurrency(fromCurrencyTF.getText, toCurrencyTF, fromRateLabel, toRateLabel)
       }
 
       fromCurrencyTF.textProperty.addListener(new ChangeListener[Any] {
         def changed(observable: ObservableValue[_], oldValue: Any, newValue: Any) {
-          toCurrencyTF.text = newValue.toString
-        }
-      })
-
-      toCurrencyTF.textProperty.addListener(new ChangeListener[Any] {
-        def changed(observable: ObservableValue[_], oldValue: Any, newValue: Any) {
-          fromCurrencyTF.text = newValue.toString
+          setResultedCurrency(newValue, toCurrencyTF, fromRateLabel, toRateLabel)
         }
       })
 
       // Updating rates in a background thread
       updRatesBtn.onAction = (_: ActionEvent) => {
         progressIndicator.visible = true
-        println("btn pressed")
 
         val task = new Task[Boolean] {
           override def call(): Boolean = {
             Thread.sleep(2000)
-            println("updated")
             true
           }
           override def succeeded(): Unit = {
