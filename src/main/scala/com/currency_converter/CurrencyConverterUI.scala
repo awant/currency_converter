@@ -17,7 +17,7 @@ object CurrencyConverterUI extends JFXApp {
   def setResultedCurrency(newValue: Any, tgtTF: TextField, srcLbl: String, tgtLbl: String): Unit = {
     try {
       val value = newValue.toString.toDouble
-      tgtTF.text = converter.convert(Currency(value, srcLbl), tgtLbl).value.toString
+      tgtTF.text = "%.2f".format(converter.convert(Currency(value, srcLbl), tgtLbl).value)
     } catch {
       case _: NumberFormatException => tgtTF.text = ""
     }
@@ -74,7 +74,8 @@ object CurrencyConverterUI extends JFXApp {
       progressIndicator.layoutY = yShifts._3
 
       // converter.getCurrencyLabels
-      val ratesTable: TableView[Rate] = new TableView[Rate](ObservableBuffer[Rate](converter.getRates)) {
+      val observableTableRates: ObservableBuffer[Rate] = ObservableBuffer[Rate](converter.getRates)
+      val ratesTable: TableView[Rate] = new TableView[Rate](observableTableRates) {
         columns ++= List(
           new TableColumn[Rate, String] {
             text = "Currency label"
@@ -82,7 +83,7 @@ object CurrencyConverterUI extends JFXApp {
             prefWidth = 180
           },
           new TableColumn[Rate, Double] {
-            text = "Rate"
+            text = "Rate (to USD)"
             cellValueFactory = {rate => ObjectProperty(rate.value.rate)}
             prefWidth = 180
           }
@@ -120,8 +121,11 @@ object CurrencyConverterUI extends JFXApp {
 
         val task = new Task[Boolean] {
           override def call(): Boolean = {
-            Thread.sleep(2000)
-            true
+            val success = converter.update()
+            if (success) {
+              observableTableRates.setAll(converter.getRates: _*)
+            }
+            success
           }
           override def succeeded(): Unit = {
             progressIndicator.visible = false
