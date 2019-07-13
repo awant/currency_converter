@@ -7,10 +7,10 @@
 
 ### UI:
 
-[ui_img](unknown_url)
+[ui_img](https://github.com/awant/currency_converter/blob/master/currency_converter_ui.png?raw=true)
 
 ### Run:
 
-It connects to www.currencyconverterapi.com and get rates for several currencies.
-To work with actual rates (not with dumped ones) you need to create 'settings.ini' alongside with src folder.
+It connects to **www.currencyconverterapi.com** and get rates for several currencies.
+To work with actual rates (not with dumped ones) you need to create **settings.ini** alongside with **src** folder.
 It should contain only one line with your API KEY.
